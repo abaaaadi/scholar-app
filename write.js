@@ -1,40 +1,72 @@
-const { hashPassword, supabase, createJWT, cors } = require('./_utils');
+const crypto = require('crypto');
+const https  = require('https');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'scholar-default-secret';
+const FREE_LIMIT = 3;
+
+function verifyJWT(token) {
+  if (!token) throw new Error('No token');
+  const [header, body, sig] = token.split('.');
+  const expected = crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest('base64url');
+  if (sig !== expected) throw new Error('Invalid token');
+  const payload = JSON.parse(Buffer.from(body, 'base64url').toString());
+  if (Date.now() > payload.exp) throw new Error('Token expired');
+  return payload;
+}
+function supabase(method, table, data) {
+  return new Promise((resolve, reject) => {
+    const SURL = process.env.SUPABASE_URL; const SKEY = process.env.SUPABASE_KEY;
+    if (!SURL || !SKEY) return reject(new Error('SUPABASE_URL or SUPABASE_KEY not set'));
+    const isGet = method === 'GET';
+    const path  = `/rest/v1/${table}${isGet && data ? '?' + data : ''}`;
+    const body  = !isGet ? JSON.stringify(data) : null;
+    const url   = new URL(SURL);
+    const opts  = { hostname: url.hostname, path, method, headers: { 'apikey': SKEY, 'Authorization': 'Bearer ' + SKEY, 'Content-Type': 'application/json', 'Prefer': method === 'POST' ? 'return=representation' : 'return=minimal' } };
+    if (body) opts.headers['Content-Length'] = Buffer.byteLength(body);
+    const req = https.request(opts, res => { let d=''; res.on('data',c=>d+=c); res.on('end',()=>{ try{resolve(d?JSON.parse(d):[]);}catch(e){reject(new Error('DB: '+d.substring(0,100)));} }); });
+    req.on('error', reject); if (body) req.write(body); req.end();
+  });
+}
+function callClaude(messages, system, maxTokens) {
+  return new Promise((resolve, reject) => {
+    const body = JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: maxTokens || 1000, system, messages });
+    const opts = { hostname: 'api.anthropic.com', path: '/v1/messages', method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01', 'Content-Length': Buffer.byteLength(body) } };
+    const req = https.request(opts, res => { let d=''; res.on('data',c=>d+=c); res.on('end',()=>{ try{resolve(JSON.parse(d));}catch(e){reject(new Error('Claude error'));} }); });
+    req.on('error', reject); req.write(body); req.end();
+  });
+}
 
 module.exports = async (req, res) => {
-  cors(res);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
-  const { email, password, name } = req.body || {};
-  if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
-  if (password.length < 6)  return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  const token = (req.headers.authorization || '').replace('Bearer ', '');
+  let payload;
+  try { payload = verifyJWT(token); } catch(e) { return res.status(401).json({ error: 'Please log in to analyze text' }); }
+
+  const { text } = req.body || {};
+  if (!text) return res.status(400).json({ error: 'text is required' });
+  if (!process.env.ANTHROPIC_API_KEY) return res.status(500).json({ error: 'ANTHROPIC_API_KEY not set' });
+
+  if (payload.plan !== 'pro') {
+    const today = new Date().toISOString().split('T')[0];
+    const rows  = await supabase('GET', 'usage', `user_id=eq.${payload.userId}&action=eq.analyze&date=eq.${today}`);
+    const count = rows && rows[0] ? rows[0].count : 0;
+    if (count >= FREE_LIMIT) return res.status(429).json({ error: `Daily analysis limit reached (${FREE_LIMIT}/day). Upgrade to Pro for unlimited.` });
+    if (rows && rows[0]) { await supabase('PATCH', `usage?user_id=eq.${payload.userId}&action=eq.analyze&date=eq.${today}`, { count: count + 1 }); }
+    else { await supabase('POST', 'usage', { user_id: payload.userId, action: 'analyze', date: today, count: 1 }); }
+  }
 
   try {
-    // Check if email already exists
-    const existing = await supabase('GET', 'users', `email=eq.${encodeURIComponent(email)}&select=id`);
-    if (existing && existing.length > 0)
-      return res.status(400).json({ error: 'Email already registered' });
-
-    // Hash password and create user
-    const { hash, salt } = hashPassword(password);
-    const users = await supabase('POST', 'users', {
-      email: email.toLowerCase().trim(),
-      password_hash: hash,
-      salt,
-      name: name || email.split('@')[0],
-      plan: 'free'
-    });
-
-    if (!users || !users[0]) throw new Error('Failed to create user');
-
-    const user  = users[0];
-    const token = createJWT({ userId: user.id, email: user.email, plan: user.plan });
-
-    return res.status(200).json({
-      token,
-      user: { id: user.id, email: user.email, name: user.name, plan: user.plan }
-    });
-  } catch (e) {
-    return res.status(500).json({ error: e.message });
-  }
+    const data = await callClaude([{ role: 'user', content: `Analyze this academic text. Return ONLY this JSON (no markdown):\n{"field":"discipline","research_question":"one sentence","keywords":["k1","k2","k3","k4","k5","k6"],"search_queries":["query1","query2","query3"],"themes":["t1","t2","t3"],"methodology":"brief","gap":"one sentence"}\n\nText: ${text.substring(0,3000)}` }],
+      'You are an academic research analyst. Return ONLY valid JSON, no other text.', 1000);
+    if (data.error) return res.status(500).json({ error: data.error.message });
+    const raw   = (data.content || []).map(b => b.text || '').join('').trim();
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (!match) return res.status(500).json({ error: 'Parse error. Try again.' });
+    return res.status(200).json(JSON.parse(match[0]));
+  } catch(e) { return res.status(500).json({ error: e.message }); }
 };

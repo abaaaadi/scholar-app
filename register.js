@@ -1,15 +1,8 @@
 const crypto = require('crypto');
 const https  = require('https');
 
-// ── JWT (pure Node crypto, no packages) ─────────────────────
-const JWT_SECRET = process.env.JWT_SECRET || 'scholar-secret-change-me';
-
-function createJWT(payload) {
-  const header  = b64(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-  const body    = b64(JSON.stringify({ ...payload, exp: Date.now() + 7 * 24 * 3600 * 1000 }));
-  const sig     = crypto.createHmac('sha256', JWT_SECRET).update(`${header}.${body}`).digest('base64url');
-  return `${header}.${body}.${sig}`;
-}
+const JWT_SECRET  = process.env.JWT_SECRET || 'scholar-default-secret';
+const FREE_LIMITS = { search: 5, analyze: 3, write: 5 };
 
 function verifyJWT(token) {
   if (!token) throw new Error('No token');
@@ -20,49 +13,24 @@ function verifyJWT(token) {
   if (Date.now() > payload.exp) throw new Error('Token expired');
   return payload;
 }
-
-function b64(str) { return Buffer.from(str).toString('base64url'); }
-
-// ── Password hashing ─────────────────────────────────────────
-function hashPassword(password, salt) {
-  salt = salt || crypto.randomBytes(16).toString('hex');
-  const hash = crypto.createHmac('sha256', salt).update(password).digest('hex');
-  return { hash, salt };
-}
-
-// ── Supabase REST API ────────────────────────────────────────
-function supabase(method, table, bodyOrQuery, token) {
+function supabase(method, table, data) {
   return new Promise((resolve, reject) => {
-    const SUPABASE_URL = process.env.SUPABASE_URL;
-    const SUPABASE_KEY = process.env.SUPABASE_KEY;
-    if (!SUPABASE_URL || !SUPABASE_KEY)
-      return reject(new Error('SUPABASE_URL or SUPABASE_KEY not set in Vercel environment variables'));
-
+    const SURL = process.env.SUPABASE_URL;
+    const SKEY = process.env.SUPABASE_KEY;
+    if (!SURL || !SKEY) return reject(new Error('SUPABASE_URL or SUPABASE_KEY not set'));
     const isGet = method === 'GET';
-    const path  = `/rest/v1/${table}${isGet && bodyOrQuery ? '?' + bodyOrQuery : ''}`;
-    const body  = !isGet ? JSON.stringify(bodyOrQuery) : null;
-    const url   = new URL(SUPABASE_URL);
-
-    const options = {
-      hostname: url.hostname,
-      path,
-      method,
-      headers: {
-        'apikey':        SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Content-Type':  'application/json',
-        'Prefer':        method === 'POST' ? 'return=representation' : 'return=minimal'
-      }
+    const path  = `/rest/v1/${table}${isGet && data ? '?' + data : ''}`;
+    const body  = !isGet ? JSON.stringify(data) : null;
+    const url   = new URL(SURL);
+    const opts  = {
+      hostname: url.hostname, path, method,
+      headers: { 'apikey': SKEY, 'Authorization': 'Bearer ' + SKEY, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' }
     };
-    if (body) options.headers['Content-Length'] = Buffer.byteLength(body);
-
-    const req = https.request(options, res => {
-      let data = '';
-      res.on('data', c => data += c);
-      res.on('end', () => {
-        try { resolve(data ? JSON.parse(data) : []); }
-        catch (e) { reject(new Error('Supabase parse error: ' + data.substring(0, 200))); }
-      });
+    if (body) opts.headers['Content-Length'] = Buffer.byteLength(body);
+    const req = https.request(opts, res => {
+      let d = '';
+      res.on('data', c => d += c);
+      res.on('end', () => { try { resolve(d ? JSON.parse(d) : []); } catch(e) { reject(new Error('DB: ' + d.substring(0,100))); } });
     });
     req.on('error', reject);
     if (body) req.write(body);
@@ -70,67 +38,38 @@ function supabase(method, table, bodyOrQuery, token) {
   });
 }
 
-// ── Anthropic API ────────────────────────────────────────────
-function callClaude(messages, system, maxTokens = 2000) {
-  return new Promise((resolve, reject) => {
-    const body = JSON.stringify({
-      model:      'claude-sonnet-4-20250514',
-      max_tokens: maxTokens,
-      system:     system || 'You are a helpful academic research assistant.',
-      messages
-    });
-    const options = {
-      hostname: 'api.anthropic.com',
-      path:     '/v1/messages',
-      method:   'POST',
-      headers: {
-        'Content-Type':      'application/json',
-        'x-api-key':         process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'Content-Length':    Buffer.byteLength(body)
-      }
-    };
-    const req = https.request(options, res => {
-      let data = '';
-      res.on('data', c => data += c);
-      res.on('end', () => {
-        try { resolve(JSON.parse(data)); }
-        catch (e) { reject(new Error('Claude parse error')); }
-      });
-    });
-    req.on('error', reject);
-    req.write(body);
-    req.end();
-  });
-}
-
-// ── CORS headers ─────────────────────────────────────────────
-function cors(res) {
-  res.setHeader('Access-Control-Allow-Origin',  '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+module.exports = async (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-}
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
-// ── Usage limits (free plan) ─────────────────────────────────
-const FREE_LIMITS = { search: 5, analyze: 3, write: 5 };
+  const token = (req.headers.authorization || '').replace('Bearer ', '');
+  let payload;
+  try { payload = verifyJWT(token); }
+  catch(e) { return res.status(401).json({ error: 'Not authenticated' }); }
 
-async function checkAndIncrementUsage(userId, action, plan) {
-  if (plan === 'pro') return { allowed: true };
+  try {
+    const users = await supabase('GET', 'users', `id=eq.${payload.userId}&select=id,email,name,plan,created_at`);
+    if (!users || !users[0]) return res.status(404).json({ error: 'User not found' });
+    const user = users[0];
 
-  const today = new Date().toISOString().split('T')[0];
-  const rows   = await supabase('GET', 'usage', `user_id=eq.${userId}&action=eq.${action}&date=eq.${today}`);
-  const count  = rows && rows[0] ? rows[0].count : 0;
-  const limit  = FREE_LIMITS[action] || 5;
+    const today    = new Date().toISOString().split('T')[0];
+    const todayRows = await supabase('GET', 'usage', `user_id=eq.${payload.userId}&date=eq.${today}`);
+    const allRows   = await supabase('GET', 'usage', `user_id=eq.${payload.userId}&select=action,count`);
 
-  if (count >= limit) return { allowed: false, count, limit };
+    const todayMap = { search: 0, analyze: 0, write: 0 };
+    const totalMap = { search: 0, analyze: 0, write: 0 };
+    (todayRows || []).forEach(r => { todayMap[r.action] = (todayMap[r.action] || 0) + r.count; });
+    (allRows   || []).forEach(r => { totalMap[r.action] = (totalMap[r.action] || 0) + r.count; });
 
-  if (rows && rows[0]) {
-    await supabase('PATCH', `usage?user_id=eq.${userId}&action=eq.${action}&date=eq.${today}`,
-      { count: count + 1 });
-  } else {
-    await supabase('POST', 'usage', { user_id: userId, action, date: today, count: 1 });
+    return res.status(200).json({
+      user,
+      today:  todayMap,
+      total:  totalMap,
+      limits: user.plan === 'pro' ? { search: '∞', analyze: '∞', write: '∞' } : FREE_LIMITS
+    });
+  } catch(e) {
+    return res.status(500).json({ error: e.message });
   }
-  return { allowed: true, count: count + 1, limit };
-}
-
-module.exports = { createJWT, verifyJWT, hashPassword, supabase, callClaude, cors, checkAndIncrementUsage, FREE_LIMITS };
+};
