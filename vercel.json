@@ -1,5 +1,26 @@
-{
-  "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
-  ]
-}
+-- Run this SQL in your Supabase project → SQL Editor
+
+-- USERS TABLE
+CREATE TABLE IF NOT EXISTS users (
+  id            UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  email         TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  salt          TEXT NOT NULL,
+  name          TEXT,
+  plan          TEXT DEFAULT 'free',
+  created_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- USAGE TABLE  
+CREATE TABLE IF NOT EXISTS usage (
+  id       UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id  UUID REFERENCES users(id) ON DELETE CASCADE,
+  action   TEXT NOT NULL,
+  date     DATE DEFAULT CURRENT_DATE,
+  count    INTEGER DEFAULT 1,
+  UNIQUE(user_id, action, date)
+);
+
+-- Allow API to read/write (disable RLS for simplicity)
+ALTER TABLE users DISABLE ROW LEVEL SECURITY;
+ALTER TABLE usage DISABLE ROW LEVEL SECURITY;
