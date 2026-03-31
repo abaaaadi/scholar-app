@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scholar — Academic Research Assistant</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0d1b2a;--nvm:#1b2e42;--nvl:#243b55;
+  --gold:#c9a84c;--gll:#e8c97a;--glp:#f5e9c8;
+  --cream:#faf8f2;--crm:#f0ead8;
+  --td:#1a1a1a;--tm:#4a4a4a;--tl:#7a7a7a;
+  --bdr:#e0d8c8;
+  --ibg:#eef4fb;--ibr:#b8d4f0;--itx:#1a4a7a;
+  --sbg:#eaf5ef;--sbr:#9fd8b8;--stx:#2d6a4f;
+  --wbg:#fef9ec;--wbr:#f5d88a;--wtx:#7a4a00;
+  --ebg:#fef0f0;--ebr:#f5b8b8;--etx:#8b1a1a;
+  --serif:'Libre Baskerville',Georgia,serif;
+  --sans:'DM Sans',system-ui,sans-serif;
+  --r:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--cream);color:var(--td);min-height:100vh;font-size:15px;line-height:1.65}
+
+/* HEADER */
+header{background:var(--navy);position:sticky;top:0;z-index:100;border-bottom:2px solid var(--gold)}
+.hdr{max-width:1200px;margin:0 auto;padding:0 1.5rem;display:flex;align-items:center;justify-content:space-between;height:58px;gap:1rem;flex-wrap:wrap}
+.logo{font-family:var(--serif);font-size:1.2rem;color:var(--gold);letter-spacing:.04em;display:flex;align-items:center;gap:7px;white-space:nowrap}
+.dot{width:8px;height:8px;background:var(--gold);border-radius:50%}
+nav{display:flex;list-style:none}
+nav li{padding:0 .9rem;height:58px;display:flex;align-items:center;cursor:pointer;font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;font-weight:500;color:rgba(255,255,255,.5);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;user-select:none;white-space:nowrap}
+nav li:hover{color:rgba(255,255,255,.85)}
+nav li.on{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* PAGES */
+.pg{display:none}.pg.on{display:block}
+.wrap{max-width:1100px;margin:0 auto;padding:2.5rem 1.5rem}
+
+/* TYPE */
+h1.pt{font-family:var(--serif);font-size:1.7rem;color:var(--navy);margin-bottom:.3rem}
+p.ps{color:var(--tl);font-size:.9rem;margin-bottom:2rem}
+
+/* CARD */
+.card{background:#fff;border:1px solid var(--bdr);border-radius:var(--r);padding:1.4rem 1.5rem;margin-bottom:1.2rem}
+.ch{font-family:var(--serif);font-size:1rem;color:var(--navy);margin-bottom:.5rem;display:flex;align-items:center;gap:8px}
+.sn{width:24px;height:24px;border-radius:50%;background:var(--navy);color:var(--gold);font-size:.75rem;font-weight:600;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.card p{color:var(--tm);font-size:.88rem;margin-bottom:.5rem}
+ul.t{list-style:none;padding:0;margin-top:.6rem}
+ul.t li{padding:.3rem 0 .3rem 1.1rem;position:relative;color:var(--tm);font-size:.85rem}
+ul.t li::before{content:'—';position:absolute;left:0;color:var(--gold);font-weight:700}
+
+/* IMRaD */
+.imrad{display:grid;grid-template-columns:160px 1fr;border:1px solid var(--bdr);border-radius:var(--r);overflow:hidden;background:#fff;margin-bottom:1.5rem}
+.il{background:var(--navy);color:var(--gold);padding:.8rem 1rem;font-family:var(--serif);font-size:.83rem;border-bottom:1px solid var(--nvm);display:flex;align-items:center}
+.iv{padding:.8rem 1rem;font-size:.82rem;color:var(--tm);border-bottom:1px solid var(--bdr)}
+.il:last-of-type,.iv:last-child{border-bottom:none}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem}
+.stat{background:#fff;border:1px solid var(--bdr);border-radius:var(--r);padding:1rem;text-align:center}
+.stn{font-family:var(--serif);font-size:1.8rem;color:var(--navy);font-weight:700;line-height:1}
+.stl{font-size:.74rem;color:var(--tl);text-transform:uppercase;letter-spacing:.07em;margin-top:4px}
+
+/* PULL QUOTE */
+.pq{border-left:3px solid var(--gold);padding:.75rem 1.1rem;background:var(--glp);border-radius:0 8px 8px 0;font-family:var(--serif);font-style:italic;font-size:.92rem;color:var(--navy);margin:1.2rem 0}
+
+/* FORM */
+.fld{margin-bottom:1.2rem}
+.lbl{font-size:.76rem;font-weight:600;color:var(--navy);letter-spacing:.04em;text-transform:uppercase;display:block;margin-bottom:.4rem}
+input,select,textarea{width:100%;padding:.68rem 1rem;border:1.5px solid var(--bdr);border-radius:8px;font-family:var(--sans);font-size:.92rem;color:var(--td);background:#fff;outline:none;transition:border-color .2s}
+input:focus,select:focus,textarea:focus{border-color:var(--navy)}
+textarea{resize:vertical;min-height:160px;line-height:1.65}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%234a4a4a'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:2rem}
+
+/* BUTTONS */
+.btn{padding:.68rem 1.3rem;border-radius:8px;font-family:var(--sans);font-size:.87rem;font-weight:500;cursor:pointer;border:none;outline:none;transition:all .2s;display:inline-flex;align-items:center;gap:6px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.bp{background:var(--navy);color:var(--gold)}.bp:hover:not(:disabled){background:var(--nvm)}
+.bs{background:#fff;color:var(--navy);border:1.5px solid var(--bdr)}.bs:hover:not(:disabled){background:var(--crm)}
+.bg{background:var(--gold);color:var(--navy)}.bg:hover:not(:disabled){background:var(--gll)}
+.bsm{padding:.32rem .78rem;font-size:.77rem;border-radius:6px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+
+/* CHIPS */
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:1.3rem}
+.chip{padding:.28rem .82rem;border-radius:20px;font-size:.77rem;cursor:pointer;border:1px solid var(--bdr);background:#fff;color:var(--tm);transition:all .15s;font-weight:500}
+.chip:hover,.chip.on{background:var(--navy);color:var(--gold);border-color:var(--navy)}
+.kchip{background:var(--glp);color:var(--navy);border:1px solid var(--gold);padding:.28rem .82rem;border-radius:20px;font-size:.78rem;cursor:pointer;font-weight:500;transition:all .15s}
+.kchip:hover{background:var(--gold)}
+
+/* ALERTS */
+.al{padding:.82rem 1rem;border-radius:8px;font-size:.85rem;margin-bottom:1rem}
+.ai{background:var(--ibg);color:var(--itx);border:1px solid var(--ibr)}
+.ao{background:var(--sbg);color:var(--stx);border:1px solid var(--sbr)}
+.aw{background:var(--wbg);color:var(--wtx);border:1px solid var(--wbr)}
+.ae{background:var(--ebg);color:var(--etx);border:1px solid var(--ebr)}
+
+/* LOADER */
+.ldr{display:inline-flex;align-items:center;gap:8px;color:var(--tl);font-size:.84rem;padding:.4rem 0}
+.sp{width:16px;height:16px;border:2px solid var(--bdr);border-top-color:var(--navy);border-radius:50%;animation:sp .7s linear infinite;flex-shrink:0}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* PAPER CARD */
+.pc{background:#fff;border:1px solid var(--bdr);border-radius:var(--r);padding:1.1rem 1.3rem;margin-bottom:.85rem;transition:border-color .2s,box-shadow .2s}
+.pc:hover{border-color:var(--nvl);box-shadow:0 2px 10px rgba(13,27,42,.07)}
+.pt2{font-family:var(--serif);font-size:.96rem;color:var(--navy);margin-bottom:.3rem;line-height:1.4}
+.pt2 a{color:inherit;text-decoration:none}.pt2 a:hover{color:var(--gold)}
+.pm{display:flex;gap:.85rem;flex-wrap:wrap;font-size:.77rem;color:var(--tl);margin-bottom:.55rem}
+.cb{background:var(--ibg);color:var(--itx);border:1px solid var(--ibr);padding:.1rem .48rem;border-radius:12px;font-size:.71rem;font-weight:600}
+.ab{font-size:.82rem;color:var(--tm);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.ab.ex{-webkit-line-clamp:unset}
+.tg{background:var(--crm);color:var(--nvl);padding:.16rem .52rem;border-radius:4px;font-size:.72rem;font-weight:500}
+.pa{display:flex;gap:7px;margin-top:.75rem;flex-wrap:wrap}
+
+/* WRITE */
+.wg{display:grid;grid-template-columns:255px 1fr;gap:1.5rem;align-items:start}
+.sb{position:sticky;top:76px}
+.sb-btn{width:100%;text-align:left;padding:.6rem .88rem;border:1px solid var(--bdr);border-radius:8px;background:#fff;font-family:var(--sans);font-size:.84rem;cursor:pointer;margin-bottom:5px;color:var(--tm);display:flex;align-items:center;gap:8px;transition:all .15s}
+.sb-btn:hover{background:var(--crm);color:var(--navy)}
+.sb-btn.on{background:var(--navy);color:var(--gold);border-color:var(--navy)}
+
+/* AI BOX */
+.aib{background:var(--navy);color:rgba(255,255,255,.9);border-radius:var(--r);padding:1.3rem 1.4rem;font-size:.87rem;line-height:1.82;margin-top:.85rem;white-space:pre-wrap}
+.aih{display:flex;align-items:center;gap:8px;margin-bottom:.85rem;padding-bottom:.65rem;border-bottom:1px solid rgba(201,168,76,.3)}
+.ail{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);font-weight:600}
+
+/* SAVED */
+.si{padding:.75rem .95rem;border:1px solid var(--bdr);border-radius:8px;background:#fff;margin-bottom:7px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.sr{background:none;border:none;color:var(--tl);cursor:pointer;font-size:15px;padding:0;line-height:1;flex-shrink:0}
+.sr:hover{color:var(--etx)}
+
+/* DIV */
+hr.dv{border:none;border-top:1px solid var(--bdr);margin:1.5rem 0}
+
+/* TWRAP */
+.tw{position:relative}
+.cc{position:absolute;bottom:9px;right:10px;font-size:.71rem;color:var(--tl)}
+
+@media(max-width:720px){
+  .wg{grid-template-columns:1fr}.sb{position:static}
+  .stats{grid-template-columns:1fr 1fr}
+  .imrad{grid-template-columns:1fr}.il{background:var(--nvm)}
+  nav li{padding:0 .55rem;font-size:.68rem;letter-spacing:.03em}
+  .hdr{height:auto;padding:.5rem 1rem}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr">
+    <div class="logo"><span class="dot"></span>Scholar <span style="font-size:.65rem;color:rgba(255,255,255,.3);font-family:var(--sans);letter-spacing:.08em;text-transform:uppercase;margin-left:2px">AI Research Assistant</span></div>
+    <nav id="nav">
+      <li class="on" data-p="guide">📚 Guide</li>
+      <li data-p="discover">🔍 Discover</li>
+      <li data-p="analyze">🧠 Analyze</li>
+      <li data-p="write">✍️ Write</li>
+      <li data-p="saved">🗂 Saved</li>
+    </nav>
+  </div>
+</header>
+
+<!-- ═══════════ GUIDE ═══════════ -->
+<div class="pg on" id="p-guide"><div class="wrap">
+  <h1 class="pt">How to Research &amp; Publish Academic Papers</h1>
+  <p class="ps">Complete methodology — from idea to publication.</p>
+
+  <div class="stats">
+    <div class="stat"><div class="stn">8</div><div class="stl">Research Phases</div></div>
+    <div class="stat"><div class="stn">5–12</div><div class="stl">Months Average</div></div>
+    <div class="stat"><div class="stn">IMRaD</div><div class="stl">Core Structure</div></div>
+  </div>
+  <div class="pq">"Research is formalized curiosity. It is poking and prying with a purpose." — Zora Neale Hurston</div>
+
+  <div class="card"><div class="ch"><span class="sn">1</span>Identify a Research Gap</div>
+    <p>Every great paper begins with a gap — something the literature doesn't explain, a contradiction to resolve, or a new angle on an old problem.</p>
+    <ul class="t"><li>Read 20–30 recent papers to map the current landscape</li><li>Look for "future work," "limitations," or "open questions" in conclusions</li><li>Define your research question in one precise sentence before proceeding</li></ul>
+  </div>
+  <div class="card"><div class="ch"><span class="sn">2</span>Systematic Literature Review</div>
+    <p>A literature review is a critical synthesis that situates your work. It is not a summary.</p>
+    <ul class="t"><li>Use Google Scholar, Semantic Scholar, PubMed, IEEE Xplore, JSTOR</li><li>Search with keywords + Boolean operators (AND, OR, NOT)</li><li>Use Zotero (free) for citation management</li><li>Group papers thematically — theories, methods, findings, debates</li></ul>
+  </div>
+  <div class="card"><div class="ch"><span class="sn">3</span>Design Your Methodology</div>
+    <ul class="t"><li><b>Quantitative:</b> experiments, surveys, statistical analysis — for measuring and generalizing</li><li><b>Qualitative:</b> interviews, case studies, ethnography — for depth and meaning</li><li><b>Mixed methods:</b> combines both for triangulation</li><li>Address validity, reliability, and ethics</li></ul>
+  </div>
+  <div class="card"><div class="ch"><span class="sn">4</span>Collect Data &amp; Analyze</div>
+    <ul class="t"><li>Keep a detailed research journal — every decision matters in peer review</li><li>Use reproducible, version-controlled workflows</li><li>Apply appropriate statistical tests; use thematic analysis for qualitative data</li><li>Negative results are still publishable</li></ul>
+  </div>
+
+  <hr class="dv"><h2 style="font-family:var(--serif);color:var(--navy);font-size:1.15rem;margin-bottom:1rem">📄 The IMRaD Structure</h2>
+  <div class="imrad">
+    <div class="il">Title &amp; Abstract</div><div class="iv">Hook + research question + method + key finding + significance. Abstract ≤ 250 words; must stand alone.</div>
+    <div class="il">Introduction</div><div class="iv">Broad context → specific problem → gap → solution → paper outline. Classic funnel shape.</div>
+    <div class="il">Literature Review</div><div class="iv">Critical synthesis, organized thematically. End by showing your gap and how you fill it.</div>
+    <div class="il">Methodology</div><div class="iv">Design, participants/data, instruments, procedure, analysis. Detailed enough for full replication.</div>
+    <div class="il">Results</div><div class="iv">Objective findings only — data, tables, figures. No interpretation here. Let numbers speak first.</div>
+    <div class="il">Discussion</div><div class="iv">Interpret results, compare with literature, explain surprises, acknowledge limits, discuss implications.</div>
+    <div class="il">Conclusion</div><div class="iv">Summarize contributions, answer your research question, suggest future work. No new information.</div>
+    <div class="il">References</div><div class="iv">Every in-text citation must appear here. Use one consistent style: APA 7, IEEE, Chicago, AMA, MLA.</div>
+  </div>
+
+  <div class="card"><div class="ch"><span class="sn">5</span>Academic Writing Principles</div>
+    <ul class="t"><li>Write results first, then introduction — frame what you already know</li><li>Active voice: "We analyzed…" not "It was analyzed…"</li><li>One idea per paragraph; lead with the topic sentence</li><li>Every claim needs data or a citation</li></ul>
+  </div>
+  <div class="card"><div class="ch"><span class="sn">6</span>Choosing a Journal &amp; Submitting</div>
+    <ul class="t"><li>Use Scimago (SJR) or Journal Citation Reports (JCR) to evaluate journals</li><li>Match scope, methodology, and audience to the journal</li><li>Check impact factor, quartile (Q1–Q4), and acceptance rate</li><li>Follow formatting guidelines exactly — rejections happen over formatting</li></ul>
+  </div>
+  <div class="card"><div class="ch"><span class="sn">7</span>Peer Review</div>
+    <ul class="t"><li>Outcomes: Accept / Minor Revision / Major Revision / Reject</li><li>Respond to each reviewer comment specifically and respectfully</li><li>Top journals reject 80–95% of submissions — resubmit elsewhere if rejected</li></ul>
+  </div>
+  <div class="card"><div class="ch"><span class="sn">8</span>After Publication</div>
+    <ul class="t"><li>Upload preprint to arXiv, SSRN, or ResearchGate for open access</li><li>Share on LinkedIn, Twitter/X, and academic networks</li><li>Track citations via Google Scholar or Scopus to build your h-index</li></ul>
+  </div>
+</div></div>
+
+<!-- ═══════════ DISCOVER ═══════════ -->
+<div class="pg" id="p-discover"><div class="wrap">
+  <h1 class="pt">Discover Academic Papers</h1>
+  <p class="ps">Search real published papers by keyword — powered by Claude AI.</p>
+
+  <div class="fld">
+    <label class="lbl">Search Keywords</label>
+    <div class="row">
+      <input type="text" id="sq" placeholder="e.g. machine learning healthcare, quantum cryptography…" style="flex:1;min-width:180px">
+      <select id="yf" style="width:130px;flex-shrink:0"><option value="">Any year</option><option value="2024">2024+</option><option value="2022">2022+</option><option value="2020">2020+</option><option value="2018">2018+</option></select>
+      <button class="btn bp" onclick="doSearch()" id="sBtn">🔍 Search</button>
+    </div>
+  </div>
+
+  <div class="chips">
+    <span class="chip" onclick="qs('artificial intelligence ethics')">AI Ethics</span>
+    <span class="chip" onclick="qs('deep learning medical imaging')">Medical Imaging AI</span>
+    <span class="chip" onclick="qs('large language models NLP')">LLMs &amp; NLP</span>
+    <span class="chip" onclick="qs('climate change adaptation policy')">Climate Policy</span>
+    <span class="chip" onclick="qs('quantum computing algorithms')">Quantum Computing</span>
+    <span class="chip" onclick="qs('blockchain supply chain')">Blockchain</span>
+    <span class="chip" onclick="qs('renewable energy battery storage')">Energy Storage</span>
+    <span class="chip" onclick="qs('mental health social media')">Mental Health</span>
+  </div>
+
+  <div id="ss"></div>
+  <div id="sr"></div>
+</div></div>
+
+<!-- ═══════════ ANALYZE ═══════════ -->
+<div class="pg" id="p-analyze"><div class="wrap">
+  <h1 class="pt">Analyze Thesis Chapter</h1>
+  <p class="ps">Paste any research text — AI extracts themes, keywords, and finds related papers.</p>
+
+  <div class="fld">
+    <label class="lbl">Your Text</label>
+    <div class="tw">
+      <textarea id="tt" rows="8" placeholder="Paste your thesis chapter, abstract, or any academic text here…"></textarea>
+      <span class="cc" id="cc">0</span>
+    </div>
+  </div>
+  <div class="row" style="margin-bottom:1.5rem">
+    <button class="btn bp" onclick="doAnalyze()" id="aBtn">🧠 Analyze with AI</button>
+    <button class="btn bs" onclick="loadEx()">Load Example</button>
+    <button class="btn bs" onclick="clearA()">Clear</button>
+  </div>
+  <div id="as2"></div>
+  <div id="ar"></div>
+  <div id="ap"></div>
+</div></div>
+
+<!-- ═══════════ WRITE ═══════════ -->
+<div class="pg" id="p-write"><div class="wrap">
+  <h1 class="pt">Academic Paper Writing Assistant</h1>
+  <p class="ps">AI guidance for every section of your paper.</p>
+
+  <div class="wg">
+    <div class="sb">
+      <label class="lbl" style="margin-bottom:.6rem;display:block">Paper Section</label>
+      <button class="sb-btn on" data-s="title"   onclick="selS(this,'title')">🏷 Title &amp; Abstract</button>
+      <button class="sb-btn"    data-s="intro"   onclick="selS(this,'intro')">📖 Introduction</button>
+      <button class="sb-btn"    data-s="litrev"  onclick="selS(this,'litrev')">📚 Literature Review</button>
+      <button class="sb-btn"    data-s="method"  onclick="selS(this,'method')">🔬 Methodology</button>
+      <button class="sb-btn"    data-s="results" onclick="selS(this,'results')">📊 Results</button>
+      <button class="sb-btn"    data-s="discuss" onclick="selS(this,'discuss')">💬 Discussion</button>
+      <button class="sb-btn"    data-s="concl"   onclick="selS(this,'concl')">✅ Conclusion</button>
+      <button class="sb-btn"    data-s="refs"    onclick="selS(this,'refs')">📝 References</button>
+      <hr class="dv">
+      <label class="lbl" style="margin-bottom:.4rem;display:block">Field</label>
+      <select id="rf"><option>Computer Science</option><option>Biology &amp; Medicine</option><option>Social Sciences</option><option>Engineering</option><option>Physics</option><option>Economics</option><option>Linguistics</option><option>Environmental Science</option><option>Psychology</option><option>Law &amp; Politics</option></select>
+    </div>
+    <div>
+      <div id="wt" style="font-family:var(--serif);font-size:1.1rem;color:var(--navy);font-weight:700;margin-bottom:.3rem"></div>
+      <div id="wd" style="font-size:.82rem;color:var(--tl);margin-bottom:1rem"></div>
+      <div class="fld"><label class="lbl">Describe your paper / paste draft</label>
+        <textarea id="wi" rows="5" placeholder="Describe your research topic or paste your draft text…"></textarea></div>
+      <div class="row" style="margin-bottom:1rem">
+        <button class="btn bp" onclick="genS()" id="gBtn">✨ Generate Guidance</button>
+        <button class="btn bs" onclick="impS()">🔄 Improve Draft</button>
+        <button class="btn bs" onclick="exS()">❓ Explain Section</button>
+      </div>
+      <div id="ws"></div>
+      <div id="wo"></div>
+    </div>
+  </div>
+</div></div>
+
+<!-- ═══════════ SAVED ═══════════ -->
+<div class="pg" id="p-saved"><div class="wrap">
+  <h1 class="pt">Saved Papers</h1>
+  <p class="ps">Papers you have bookmarked for reference.</p>
+  <div id="si2" class="al ai"></div>
+  <div id="sl"></div>
+  <div id="ex"></div>
+</div></div>
+
+<script>
+// ── State ────────────────────────────────────────────────────
+let saved=JSON.parse(localStorage.getItem('sch_sv')||'[]');
+let curS='title';
+
+// ── Nav ──────────────────────────────────────────────────────
+document.querySelectorAll('#nav li').forEach(li=>{
+  li.addEventListener('click',()=>{
+    document.querySelectorAll('#nav li').forEach(l=>l.classList.remove('on'));
+    document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+    li.classList.add('on');
+    document.getElementById('p-'+li.dataset.p).classList.add('on');
+    if(li.dataset.p==='saved')renderSaved();
+  });
+});
+
+// ── Char count ───────────────────────────────────────────────
+document.getElementById('tt').addEventListener('input',function(){
+  document.getElementById('cc').textContent=this.value.length.toLocaleString()+' chars';
+});
+
+// ── Helpers ──────────────────────────────────────────────────
+const $=id=>document.getElementById(id);
+function set(id,h){$(id).innerHTML=h;}
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+async function api(path,body){
+  const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d=await r.json();
+  if(d.error)throw new Error(d.error);
+  return d;
+}
+
+// ══════════════════════════════════════════════════════════════
+// DISCOVER
+// ══════════════════════════════════════════════════════════════
+function qs(term){$('sq').value=term;document.querySelectorAll('#nav li').forEach(l=>l.classList.remove('on'));document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));document.querySelector('[data-p="discover"]').classList.add('on');$('p-discover').classList.add('on');doSearch();}
+
+async function doSearch(){
+  const q=$('sq').value.trim();if(!q){alert('Enter search keywords.');return;}
+  const yr=$('yf').value;
+  const btn=$('sBtn');btn.disabled=true;btn.textContent='Searching…';
+  set('ss',`<div class="ldr"><div class="sp"></div>Searching for "<em>${esc(q)}</em>" — takes ~10 sec…</div>`);
+  set('sr','');
+  try{
+    const d=await api('/api/search',{query:q,yearFilter:yr});
+    set('ss',`<div class="al ao">✅ <strong>${d.papers.length}</strong> papers found for "<em>${esc(q)}</em>"</div>`);
+    renderPapers(d.papers,'sr');
+  }catch(e){set('ss',`<div class="al ae">❌ ${esc(e.message)}</div>`);}
+  finally{btn.disabled=false;btn.textContent='🔍 Search';}
+}
+$('sq').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
+
+// ── Render papers ────────────────────────────────────────────
+function renderPapers(papers,cid){
+  const c=$(cid);
+  c.querySelectorAll('.pc').forEach(el=>el.remove());
+  papers.forEach((p,i)=>{
+    const uid=cid+'_'+i;
+    const au=(p.authors||[]).slice(0,3).map(a=>a.name).join(', ')+((p.authors||[]).length>3?` +${p.authors.length-3} more`:'');
+    const abs=p.abstract||'No abstract available.';
+    const href=p.url||('#');
+    const isSv=saved.some(s=>s.title===p.title);
+    const el=document.createElement('div');el.className='pc';
+    el.innerHTML=`
+      <div class="pt2"><a href="${esc(href)}" target="_blank" rel="noopener">${esc(p.title||'Untitled')}</a></div>
+      <div class="pm">
+        <span>👤 ${esc(au||'Unknown')}</span>
+        ${p.year?`<span>📅 ${p.year}</span>`:''}
+        ${p.journal&&p.journal.name?`<span>📰 ${esc(p.journal.name.substring(0,45))}</span>`:''}
+        ${typeof p.citationCount==='number'?`<span><span class="cb">📌 ${p.citationCount.toLocaleString()} citations</span></span>`:''}
+      </div>
+      <div class="ab" id="ab${uid}">${esc(abs)}</div>
+      ${abs.length>200?`<a href="#" style="font-size:.77rem;color:var(--navy);margin-top:3px;display:inline-block" onclick="togA('${uid}');return false" id="tg${uid}">Show more ↓</a>`:''}
+      <div class="pa">
+        <a href="${esc(href)}" target="_blank" rel="noopener" class="btn bs bsm">🔗 Open</a>
+        <button class="btn bsm ${isSv?'bg':'bs'}" id="sv${uid}" onclick="togSv('${uid}',${JSON.stringify(p).replace(/"/g,'&quot;')})">
+          ${isSv?'✅ Saved':'🔖 Save'}
+        </button>
+        <button class="btn bs bsm" onclick="cpAPA(${JSON.stringify(p).replace(/"/g,'&quot;')})">📋 APA</button>
+      </div>`;
+    c.appendChild(el);
+  });
+}
+
+function togA(uid){const a=$('ab'+uid),t=$('tg'+uid);a.classList.toggle('ex');t.textContent=a.classList.contains('ex')?'Show less ↑':'Show more ↓';}
+
+function togSv(uid,p){
+  const idx=saved.findIndex(s=>s.title===p.title);
+  const btn=$('sv'+uid);
+  if(idx>-1){saved.splice(idx,1);btn.textContent='🔖 Save';btn.className='btn bs bsm';}
+  else{saved.push(p);btn.textContent='✅ Saved';btn.className='btn bg bsm';}
+  localStorage.setItem('sch_sv',JSON.stringify(saved));
+}
+
+function cpAPA(p){
+  const a=(p.authors||[]).map(x=>{const pts=x.name.split(' ');return pts.length<2?x.name:pts[pts.length-1]+', '+pts.slice(0,-1).map(n=>n[0]+'.').join(' ');}).join(', ');
+  const j=p.journal&&p.journal.name?p.journal.name:'';
+  const ref=`${a} (${p.year||'n.d.'}). ${p.title}. ${j}. ${p.url||''}`;
+  navigator.clipboard.writeText(ref).then(()=>alert('✅ APA citation copied!\n\n'+ref));
+}
+
+// ══════════════════════════════════════════════════════════════
+// ANALYZE
+// ══════════════════════════════════════════════════════════════
+function loadEx(){
+  $('tt').value=`This chapter investigates transformer-based neural architectures for low-resource multilingual machine translation. Traditional sequence-to-sequence models rely on large parallel corpora, which are scarce for many African and South Asian languages. We propose a cross-lingual transfer learning approach using mBERT and XLM-R pretrained embeddings to bootstrap translation quality for five under-resourced languages: Swahili, Wolof, Igbo, Sindhi, and Pashto. Our experiments demonstrate that fine-tuning on as few as 10,000 sentence pairs yields BLEU improvements of 8–14 points over baseline models. We further explore data augmentation via back-translation and pivot language approaches. Results suggest that structural similarities between related language families can be exploited to transfer knowledge effectively, even without direct parallel data. The findings have significant implications for digital inclusion and multilingual AI in Global South contexts.`;
+  $('cc').textContent=$('tt').value.length.toLocaleString()+' chars';
+}
+function clearA(){$('tt').value='';$('cc').textContent='0';set('as2','');set('ar','');set('ap','');}
+
+async function doAnalyze(){
+  const txt=$('tt').value.trim();
+  if(!txt||txt.length<50){alert('Paste at least a paragraph of text.');return;}
+  const btn=$('aBtn');btn.disabled=true;btn.textContent='⏳ Analyzing…';
+  set('as2',`<div class="ldr"><div class="sp"></div>Analyzing your text with AI…</div>`);
+  set('ar','');set('ap','');
+  try{
+    const a=await api('/api/analyze',{text:txt});
+    set('as2','');
+    set('ar',`
+      <div class="card">
+        <div class="ch">🎓 AI Analysis</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div><span class="lbl">Field</span><div style="color:var(--tm);font-size:.87rem">${esc(a.field||'—')}</div></div>
+          <div><span class="lbl">Methodology</span><div style="color:var(--tm);font-size:.87rem">${esc(a.methodology||'—')}</div></div>
+        </div>
+        <div style="margin-bottom:.8rem"><span class="lbl">Research Question</span>
+          <div class="pq" style="margin-top:.4rem">${esc(a.research_question||'—')}</div></div>
+        <div style="margin-bottom:.8rem"><span class="lbl">Research Gap</span>
+          <div style="color:var(--tm);font-size:.87rem">${esc(a.gap||'—')}</div></div>
+        <div style="margin-bottom:.8rem"><span class="lbl">Themes</span>
+          <div class="chips" style="margin-bottom:0">${(a.themes||[]).map(t=>`<span class="tg">${esc(t)}</span>`).join('')}</div></div>
+        <div><span class="lbl">Click keyword → search related papers ↓</span>
+          <div class="chips" style="margin-top:.4rem;margin-bottom:0">
+            ${(a.keywords||[]).map(k=>`<span class="kchip" onclick="skw('${esc(k)}')">${esc(k)}</span>`).join('')}
+            ${(a.search_queries||[]).map(q=>`<span class="kchip" style="border-style:dashed" onclick="skw('${esc(q)}')">${esc(q)}</span>`).join('')}
+          </div></div>
+      </div>`);
+    if(a.search_queries&&a.search_queries.length) await skw(a.search_queries[0]);
+  }catch(e){set('as2',`<div class="al ae">❌ ${esc(e.message)}</div>`);}
+  finally{btn.disabled=false;btn.textContent='🧠 Analyze with AI';}
+}
+
+async function skw(kw){
+  set('ap',`<div class="ldr"><div class="sp"></div>Searching papers for "${esc(kw)}"…</div>`);
+  try{
+    const d=await api('/api/search',{query:kw});
+    $('ap').innerHTML=`<h3 style="font-family:var(--serif);color:var(--navy);font-size:1rem;margin-bottom:.7rem">📖 Papers: "${esc(kw)}"</h3>`;
+    renderPapers(d.papers,'ap');
+  }catch(e){set('ap',`<div class="al ae">Search failed: ${esc(e.message)}</div>`);}
+}
+
+// ══════════════════════════════════════════════════════════════
+// WRITE
+// ══════════════════════════════════════════════════════════════
+const SD={
+  title:{t:'Title & Abstract',d:'Abstract ≤ 250 words; must cover purpose, method, results, conclusion. Title should be specific and searchable.',
+    p:(t,f)=>`You are a senior ${f} researcher. For paper on: "${t}" — generate: (1) Three title options, (2) Structured abstract: Background/Objective/Methods/Results/Conclusion, (3) Five indexing keywords. Use clear headers.`},
+  intro:{t:'Introduction',d:'Funnel: broad context → problem → gap → solution → paper overview.',
+    p:(t,f)=>`You are a senior ${f} researcher. Write an introduction framework for: "${t}". Cover: opening hook, background context, problem statement, research gap, research question/hypothesis, methodology preview, paper contributions, and section overview.`},
+  litrev:{t:'Literature Review',d:'Organize thematically, not chronologically. Synthesize multiple sources per paragraph.',
+    p:(t,f)=>`You are a senior ${f} researcher. Help structure a literature review for: "${t}". Provide: recommended thematic structure, talking points per theme, transition phrases, sample synthesizing paragraph, and how to write the gap-identification closing.`},
+  method:{t:'Methodology',d:'Detailed enough for another researcher to replicate your study exactly.',
+    p:(t,f)=>`You are a senior ${f} researcher. Write a complete methodology framework for: "${t}". Include: research design justification, participants/data template, instruments, step-by-step procedure, analysis approach, validity/reliability discussion, ethics, and limitations.`},
+  results:{t:'Results',d:'Objective findings only. Do NOT interpret. Report statistics with exact values.',
+    p:(t,f)=>`You are a senior ${f} researcher. Guide writing the Results section for: "${t}". Cover: structure overview, how to introduce each result, referencing tables/figures, statistical reporting conventions, example results paragraph, and what NOT to include.`},
+  discuss:{t:'Discussion',d:'Reverse funnel: specific → broad. Interpret results vs. literature.',
+    p:(t,f)=>`You are a senior ${f} researcher. Provide a Discussion section framework for: "${t}". Cover: opening (back to research question), interpreting main findings, comparison with literature, explaining surprises, implications, limitations, future directions.`},
+  concl:{t:'Conclusion',d:'Summarize contributions. Answer your research question. No new information.',
+    p:(t,f)=>`You are a senior ${f} researcher. Write a Conclusion section for: "${t}". Include: big-picture opening, key contributions, direct answer to research question, implications, future directions, closing statement. Also: 5 things a conclusion must NEVER do.`},
+  refs:{t:'References & Citations',d:'Every in-text citation must appear in the list and vice versa.',
+    p:(t,f)=>`You are a senior ${f} researcher. Provide a complete citations guide for a ${f} paper on: "${t}". Cover: standard style for this field, in-text citation patterns, reference formats for journal/book/conference/website/preprint, Zotero tips, avoiding plagiarism, example references for each type.`}
+};
+
+function selS(btn,s){
+  document.querySelectorAll('.sb-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');curS=s;
+  $('wt').textContent=SD[s].t;$('wd').textContent=SD[s].d;
+  set('wo','');set('ws','');
+}
+selS(document.querySelector('.sb-btn'),'title');
+
+async function genS(){
+  const t=$('wi').value.trim(),f=$('rf').value;
+  if(!t){alert('Describe your paper topic first.');return;}
+  await callW(SD[curS].p(t,f),'AI Guidance: '+SD[curS].t);
+}
+async function impS(){
+  const t=$('wi').value.trim(),f=$('rf').value;
+  if(!t){alert('Paste your draft text first.');return;}
+  await callW(`You are a senior ${f} academic editor. Improve this draft for the ${SD[curS].t} section:\n\n"${t}"\n\nProvide: (1) Improved version, (2) Problems identified, (3) Better sentence alternatives, (4) Missing elements, (5) Vocabulary upgrades.`,'Improvement Suggestions');
+}
+async function exS(){
+  const f=$('rf').value;
+  await callW(`Explain the ${SD[curS].t} section of an academic paper in ${f}. Cover: purpose, common structure, length expectations, tense/voice conventions, 3 example opening sentences, and the most common mistakes novice researchers make.`,'About: '+SD[curS].t);
+}
+
+async function callW(prompt,label){
+  const btn=$('gBtn');btn.disabled=true;
+  set('ws',`<div class="ldr"><div class="sp"></div>Generating guidance…</div>`);
+  set('wo','');
+  try{
+    const d=await api('/api/write',{prompt});
+    set('ws','');
+    set('wo',`
+      <div class="aib">
+        <div class="aih"><span style="font-size:17px">🤖</span><span class="ail">${esc(label)}</span></div>
+        <div style="white-space:pre-wrap;line-height:1.82">${esc(d.text)}</div>
+      </div>
+      <div class="row" style="margin-top:.7rem">
+        <button class="btn bs bsm" onclick="navigator.clipboard.writeText(document.querySelector('.aib div:last-child').textContent).then(()=>alert('Copied!'))">📋 Copy</button>
+        <button class="btn bs bsm" onclick="genS()">🔄 Regenerate</button>
+      </div>`);
+  }catch(e){set('ws',`<div class="al ae">❌ ${esc(e.message)}</div>`);}
+  finally{btn.disabled=false;}
+}
+
+// ══════════════════════════════════════════════════════════════
+// SAVED
+// ══════════════════════════════════════════════════════════════
+function renderSaved(){
+  const info=$('si2'),list=$('sl'),exp=$('ex');
+  if(!saved.length){info.textContent='No saved papers yet.';list.innerHTML=`<div style="text-align:center;padding:3rem;color:var(--tl)"><div style="font-size:2rem;margin-bottom:.5rem">📂</div>Search and bookmark papers to see them here.</div>`;exp.innerHTML='';return;}
+  info.textContent=`📚 ${saved.length} paper${saved.length!==1?'s':''} saved`;
+  list.innerHTML='';
+  saved.forEach((p,i)=>{
+    const au=(p.authors||[]).slice(0,2).map(a=>a.name).join(', ');
+    const el=document.createElement('div');el.className='si';
+    el.innerHTML=`<div style="flex:1"><div style="font-size:.87rem;color:var(--navy);font-weight:500;line-height:1.35">${esc(p.title||'Untitled')}</div><div style="font-size:.75rem;color:var(--tl);margin-top:2px">${esc(au)}${p.year?' · '+p.year:''}</div></div>
+    <div class="row" style="align-items:center;flex-shrink:0">${p.url?`<a href="${esc(p.url)}" target="_blank" class="btn bs bsm">Open</a>`:''}<button class="sr" onclick="rmSv(${i})" title="Remove">✕</button></div>`;
+    list.appendChild(el);
+  });
+  exp.innerHTML=`<button class="btn bs" onclick="expRefs()" style="margin-top:.5rem">📋 Export APA References</button><div id="eo" style="margin-top:1rem"></div>`;
+}
+
+function rmSv(i){saved.splice(i,1);localStorage.setItem('sch_sv',JSON.stringify(saved));renderSaved();}
+
+function expRefs(){
+  const txt=saved.map((p,i)=>{
+    const a=(p.authors||[]).map(x=>{const pts=x.name.split(' ');return pts.length<2?x.name:pts[pts.length-1]+', '+pts.slice(0,-1).map(n=>n[0]+'.').join(' ');}).join(', ');
+    const j=p.journal&&p.journal.name?p.journal.name:'';
+    return `[${i+1}] ${a} (${p.year||'n.d.'}). ${p.title}. ${j}. ${p.url||''}`;
+  }).join('\n\n');
+  $('eo').innerHTML=`<pre style="background:#fff;border:1px solid var(--bdr);border-radius:8px;padding:1rem;font-size:.79rem;white-space:pre-wrap;color:var(--td)">${esc(txt)}</pre><button class="btn bs bsm" style="margin-top:.4rem" onclick="navigator.clipboard.writeText(atob('${btoa(txt)}')).then(()=>alert('Copied!'))">📋 Copy All</button>`;
+}
+</script>
+</body>
+</html>
